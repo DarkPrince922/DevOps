@@ -1,0 +1,8 @@
+python-telegram-bot[socks]==20.7
+httpx[socks]==0.25.2
+requests==2.32.3
+paramiko==3.5.0
+python-dotenv==1.0.1
+PySocks==1.7.1
+matplotlib==3.9.2
+kubernetes==31.0.0

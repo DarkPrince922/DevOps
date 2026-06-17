@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: devops-bot-config
+  namespace: devops-bot
+data:
+  AI_BASE_URL: "https://routerai.ru/api/v1"
+  AI_MODEL: "anthropic/claude-opus-4-7"
+  ADMIN_IDS: "123456789"
+  MAX_OUTPUT: "4000"
+  MAX_FILE_SIZE: "200000"
+  MAX_HISTORY_CHARS: "60000"
+  AUTO_CONTINUE_LIMIT: "3"
+  SESSION_TTL_DAYS: "30"
+  DATA_DIR: "/app/data"
+  WORK_DIR: "/app"
+  K8S_NAMESPACE: "devops-bot"
+  K8S_CONFIGMAP: "devops-bot-config"
+  K8S_SECRET: "devops-bot-secret"
+  K8S_DEPLOYMENT: "devops-bot"
