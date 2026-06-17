@@ -211,10 +211,10 @@ def local_exec(cmd, allow_dangerous=False, uid=None):
                 try: os.killpg(p.pid, 15)
                 except Exception: p.kill()
                 return "⏹ Остановлено."
-            if time.time() - start > 40:
+            if time.time() - start > state.CMD_TIMEOUT:
                 try: os.killpg(p.pid, 9)
                 except Exception: p.kill()
-                return "❌ Command timed out"
+                return f"❌ Команда превысила лимит {state.CMD_TIMEOUT}c. Для долгих установок запусти в фоне (nohup … >/tmp/log 2>&1 &) и проверяй прогресс отдельно."
             time.sleep(0.2)
         out, err = p.communicate()
         return ((out + err).strip() or "(нет вывода)")[:state.MAX_OUTPUT]
@@ -239,7 +239,7 @@ def ssh_exec(cfg, cmd, allow_dangerous=False, uid=None, overwrite_host_key=False
             phost, pport, puser, ppass = proxy_cfg
             sock = socks.create_connection(
                 (cfg["host"], cfg.get("port", 22)),
-                timeout=10,
+                timeout=state.SSH_CONNECT_TIMEOUT,
                 proxy_type=socks.SOCKS5,
                 proxy_addr=phost,
                 proxy_port=pport,
@@ -251,7 +251,7 @@ def ssh_exec(cfg, cmd, allow_dangerous=False, uid=None, overwrite_host_key=False
             "hostname": cfg["host"],
             "username": cfg["user"],
             "port": cfg.get("port", 22),
-            "timeout": 10,
+            "timeout": state.SSH_CONNECT_TIMEOUT,
             "sock": sock,
         }
         private_key = cfg.get("private_key")
@@ -274,7 +274,7 @@ def ssh_exec(cfg, cmd, allow_dangerous=False, uid=None, overwrite_host_key=False
         else:
             connect_kwargs["password"] = cfg.get("password")
         ssh.connect(**connect_kwargs)
-        _, out, err = ssh.exec_command(cmd, timeout=30)
+        _, out, err = ssh.exec_command(cmd, timeout=state.CMD_TIMEOUT)
         channel = out.channel
         if uid is not None:
             state.ACTIVE_CHANNELS[uid] = channel
@@ -283,9 +283,9 @@ def ssh_exec(cfg, cmd, allow_dangerous=False, uid=None, overwrite_host_key=False
             if uid is not None and state.STOP_FLAGS.get(uid):
                 channel.close()
                 return "⏹ Остановлено."
-            if time.time() - start > 30:
+            if time.time() - start > state.CMD_TIMEOUT:
                 channel.close()
-                return "❌ SSH command timed out"
+                return f"❌ SSH-команда превысила лимит {state.CMD_TIMEOUT}c. Для долгих установок запусти в фоне (nohup … >/tmp/log 2>&1 &) и проверяй прогресс отдельной командой."
             time.sleep(0.2)
         result = out.read().decode(errors="replace") + err.read().decode(errors="replace")
         return (result.strip() or "(нет вывода)")[:state.MAX_OUTPUT]
