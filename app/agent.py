@@ -3,7 +3,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 import app.state as state
 from app.storage import get_servers, get_session, set_session
-from app.gpt import gpt_call, consult_agents, trim_history, needs_confirmation, is_message_too_long, is_intermediate_answer, clean_text, model_extra_system_prompt
+from app.gpt import gpt_call, consult_agents, trim_history, needs_confirmation, is_message_too_long, is_intermediate_answer, is_tool_call_failure, clean_text, model_extra_system_prompt
 from app.executor import local_exec, ssh_exec, read_file, write_file, web_fetch, web_search
 from app.ui import status_updater
 
@@ -101,6 +101,7 @@ async def run_agent(goal, update, status_msg, uid, continue_existing=False):
 
     step = 0
     auto_continue_count = 0
+    tool_retry_count = 0
     used_web_sources = False
     try:
         while True:
@@ -244,6 +245,18 @@ async def run_agent(goal, update, status_msg, uid, continue_existing=False):
             if content:
                 history.append({"role": "assistant", "content": content})
                 set_session(uid, history)
+                if is_tool_call_failure(content):
+                    if tool_retry_count < 2:
+                        tool_retry_count += 1
+                        history.append({"role": "user", "content": (
+                            "Не пиши служебные сообщения о невозможности сформировать вызов инструмента. "
+                            "Вызови нужный инструмент (function call / tool_calls) в стандартном формате прямо сейчас, одним конкретным шагом. "
+                            "Если шаг неоднозначен — начни с самого безопасного: чтение или диагностика (например, read_file/ssh_exec с командой просмотра)."
+                        )})
+                        set_session(uid, history)
+                        continue
+                    state.PENDING_CONTINUE.pop(uid, None)
+                    return "Модель несколько раз не смогла вызвать инструмент. Сбрось сессию (♻️), переформулируй задачу одним конкретным шагом или переключи активного агента на модель с надёжной поддержкой function-calling."
                 if is_intermediate_answer(content):
                     if auto_continue_count < state.AUTO_CONTINUE_LIMIT:
                         auto_continue_count += 1

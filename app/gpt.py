@@ -482,6 +482,24 @@ def is_intermediate_answer(text):
     ]
     return any(re.search(p, t) for p in patterns) and not any(d in t for d in done_markers)
 
+def is_tool_call_failure(text):
+    """Модель вернула служебную отписку о невозможности вызвать инструмент
+    вместо самого tool call. Такое бывает у части моделей/реселлеров при
+    function-calling — нужно подтолкнуть модель повторить шаг с вызовом."""
+    if not text:
+        return False
+    t = text.lower()
+    patterns = [
+        r"valid client-side tool call",
+        r"(?:could not|couldn'?t|cannot|can'?t|unable to|failed to)[^.\n]{0,40}tool call",
+        r"(?:could not|couldn'?t|cannot|can'?t|unable to|failed to)[^.\n]{0,40}function call",
+        r"retry the same action",
+        r"ask for one specific file or shell operation",
+        r"не удалось[^.\n]{0,40}(?:вызов|tool call|инструмент|function)",
+        r"не (?:могу|получилось|удаётся)[^.\n]{0,40}(?:вызвать инструмент|tool call|вызов инструмента)",
+    ]
+    return any(re.search(p, t) for p in patterns)
+
 def _fix_mojibake(text):
     if not isinstance(text, str) or not text:
         return text
