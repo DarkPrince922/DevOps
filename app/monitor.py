@@ -9,6 +9,14 @@ from app.k8s_handlers import k8s_health_alert
 
 CHECK_INTERVAL = int(os.environ.get("SERVICE_MONITOR_INTERVAL", "60"))
 
+# Заведомо «шумные» systemd-юниты, которые регулярно падают без последствий.
+# Расширяется через SERVICE_MONITOR_IGNORE (имена через запятую/пробел).
+IGNORED_UNITS = {
+    u.strip() for u in (
+        "fwupd-refresh.service " + os.environ.get("SERVICE_MONITOR_IGNORE", "")
+    ).replace(",", " ").split() if u.strip()
+}
+
 CHECK_CMD = r'''
 {
   if command -v docker >/dev/null 2>&1; then
@@ -24,8 +32,22 @@ _last_state = {}
 _last_k8s_alert = None
 
 
+def _is_unreachable(output):
+    # Ошибки проверки (таймаут SSH, обрыв соединения и т.п.) executor возвращает
+    # строкой, начинающейся с ❌. Это не падение сервиса, а недоступность хоста.
+    return (output or '').strip().startswith('❌')
+
+
 def _failed_lines(output):
-    return [line for line in (output or '').splitlines() if line.strip() and not line.startswith('(')]
+    out = []
+    for line in (output or '').splitlines():
+        if not line.strip() or line.startswith('('):
+            continue
+        parts = line.split('\t')
+        if len(parts) >= 2 and parts[0] == 'SYSTEMD' and parts[1] in IGNORED_UNITS:
+            continue
+        out.append(line)
+    return out
 
 
 def _failure_key(line):
@@ -80,6 +102,10 @@ async def service_monitor(bot):
             servers = get_servers()
             for name, cfg in servers.items():
                 output = await asyncio.to_thread(ssh_exec, cfg, CHECK_CMD, True, None)
+                # Хост недоступен / ошибка проверки — не считаем это падением сервисов
+                # и не трогаем сохранённое состояние, иначе монитор начинает «флапать».
+                if _is_unreachable(output):
+                    continue
                 failed = '' if output.strip() == '(нет вывода)' else output.strip()
                 current = {_failure_key(line): line for line in _failed_lines(failed)}
                 prev = _last_state.get(name)
