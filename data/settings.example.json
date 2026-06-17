@@ -1,0 +1,7 @@
+{
+  "max_output": 4000,
+  "max_history_chars": 60000,
+  "auto_continue_limit": 3,
+  "max_agent_steps": 20,
+  "service_monitor_enabled": true
+}
