@@ -1,9 +1,22 @@
+# secrets / runtime data
 .env
+.env.*
+!.env.example
+data/servers.json
+data/proxies.json
+data/sessions.json
+data/preapproved_commands.json
+data/kubeconfig.yaml
+data/.ssh/
+data/users/
+k8s/secret.yaml
+
+# python / build artifacts
 __pycache__/
 *.py[cod]
 *.bak*
 *.lock
-data/servers.json
-data/proxies.json
-data/sessions.json
-data/.ssh/
+
+# runtime caches
+.cache/
+.config/
