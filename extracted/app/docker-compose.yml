@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  bot:
+    build: .
+    container_name: DevOps
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./app:/app/app
+      - ./bot.py:/app/bot.py
+      - ./healthcheck.py:/app/healthcheck.py
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD-SHELL", "python /app/healthcheck.py"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-bot
+  namespace: devops-bot
+  labels:
+    app: devops-bot
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: devops-bot
+  template:
+    metadata:
+      labels:
+        app: devops-bot
+    spec:
+      serviceAccountName: devops-bot
+      containers:
+        - name: devops-bot
+          image: ghcr.io/OWNER/REPOSITORY:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: devops-bot-config
+            - secretRef:
+                name: devops-bot-secret
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+          livenessProbe:
+            exec:
+              command: ["python", "/app/healthcheck.py"]
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command: ["python", "/app/healthcheck.py"]
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: devops-bot-data
