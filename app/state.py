@@ -55,6 +55,12 @@ AUTO_CONTINUE_LIMIT = int(os.environ.get("AUTO_CONTINUE_LIMIT", "3"))
 
 MAX_AGENT_STEPS = int(os.environ.get("MAX_AGENT_STEPS", "20"))
 
+# Таймаут выполнения одной команды (локально и по SSH), сек.
+# apt install и сборки не укладываются в старые 30/40 c — даём больше и делаем настраиваемым.
+CMD_TIMEOUT = max(10, int(os.environ.get("CMD_TIMEOUT", "180")))
+# Таймаут установки SSH-соединения, сек.
+SSH_CONNECT_TIMEOUT = max(5, int(os.environ.get("SSH_CONNECT_TIMEOUT", "15")))
+
 DANGEROUS_WORDS = {"shutdown", "reboot", "halt", "poweroff", "mkfs", "dd", "init", "telinit", "wipefs", "fdisk", "parted", "visudo"}
 DANGEROUS_PATTERNS = [
     r"rm\s+-[^;&|]*[rf][^;&|]*\s+/(?:\s|$)",
