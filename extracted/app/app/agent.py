@@ -245,7 +245,7 @@ async def run_agent(goal, update, status_msg, uid, continue_existing=False):
                 history.append({"role": "assistant", "content": content})
                 set_session(uid, history)
                 if is_intermediate_answer(content):
-                    if auto_continue_count < max(state.AUTO_CONTINUE_LIMIT, 3):
+                    if auto_continue_count < state.AUTO_CONTINUE_LIMIT:
                         auto_continue_count += 1
                         history.append({"role": "user", "content": "Это промежуточная фраза, а не результат. Не отвечай планом. Если нужны данные проекта/сервера/файлов — сейчас вызови tools/function calls. После инструментов дай финальный краткий итог."})
                         set_session(uid, history)

@@ -554,8 +554,7 @@ def transcribe_audio(path):
 
     for attempt in range(len(delays) + 1):
         try:
-            _cur_base = (state.API_BASE or _API_BASE).rstrip("/")
-            _cur_key = state.API_KEY or _API_KEY
+            _cur_base, _cur_key = _api_config_for_agent(state.active_agent())
             r = requests.post(
                 f"{_cur_base}/chat/completions",
                 headers={"Authorization": f"Bearer {_cur_key}", "Content-Type": "application/json"},
@@ -612,8 +611,7 @@ def analyze_image(path, prompt=None):
 
     for attempt in range(len(delays) + 1):
         try:
-            _cur_base = (state.API_BASE or _API_BASE).rstrip("/")
-            _cur_key = state.API_KEY or _API_KEY
+            _cur_base, _cur_key = _api_config_for_agent(state.active_agent())
             r = requests.post(
                 f"{_cur_base}/chat/completions",
                 headers={"Authorization": f"Bearer {_cur_key}", "Content-Type": "application/json"},

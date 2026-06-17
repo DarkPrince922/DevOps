@@ -240,7 +240,6 @@ def default_settings():
         "max_history_chars": MAX_HISTORY_CHARS,
         "auto_continue_limit": AUTO_CONTINUE_LIMIT,
         "max_agent_steps": MAX_AGENT_STEPS,
-        "max_agent_steps": MAX_AGENT_STEPS,
         "service_monitor_enabled": os.environ.get("SERVICE_MONITOR_ENABLED", "1").lower() not in {"0", "false", "no", "off"},
     }
 
@@ -267,6 +266,7 @@ def apply_settings(cfg=None):
         "max_output": MAX_OUTPUT,
         "max_history_chars": MAX_HISTORY_CHARS,
         "auto_continue_limit": AUTO_CONTINUE_LIMIT,
+        "max_agent_steps": MAX_AGENT_STEPS,
         "service_monitor_enabled": bool(cfg.get("service_monitor_enabled", True)),
     })
 

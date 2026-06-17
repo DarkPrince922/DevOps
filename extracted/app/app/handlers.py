@@ -219,8 +219,6 @@ async def handle_text_file(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     doc = update.message.document
     filename = doc.file_name or "file.txt"
     suffix = Path(filename).suffix or ".txt"
-    ACTIVE_TASKS.add(uid)
-    RUNNING_TASKS[uid] = asyncio.current_task()
     if not _is_supported_text_document(doc):
         await update.message.reply_text("❌ Этот тип файла не поддерживается для чтения как текст.")
         return
@@ -228,6 +226,8 @@ async def handle_text_file(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"❌ Файл слишком большой для чтения как текст (лимит {TEXT_FILE_MAX_BYTES // 1024 // 1024} МБ).")
         return
 
+    ACTIVE_TASKS.add(uid)
+    RUNNING_TASKS[uid] = asyncio.current_task()
     status = await update.message.reply_text(build_status(uid, 0, "Читаю файл..."))
     tmp_path = None
     try:

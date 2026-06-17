@@ -5,9 +5,9 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 import app.state as state
 from app.core import (
-    PENDING_ADMIN_SETTING, admin_panel_markup, admin_panel_text, agents_menu_markup,
+    PENDING_ADMIN_SETTING, SESSION_HISTORY, admin_panel_markup, admin_panel_text, agents_menu_markup,
     agents_menu_text, providers_menu_markup, providers_menu_text, get_proxy_config, is_authorized, normalize_socks5, save_proxy_config,
-    send_text, set_setting, reset_session, get_servers
+    save_sessions, send_text, set_setting, reset_session, get_servers
 )
 from app.ui import projects_menu_markup, projects_menu_text, provider_add_step_markup, agent_add_step_markup
 from app.executor import local_exec as run_local_exec, ssh_exec as run_ssh_exec
