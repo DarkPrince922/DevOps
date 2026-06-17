@@ -1,9 +1,0 @@
-.env
-__pycache__/
-*.py[cod]
-*.bak*
-*.lock
-data/servers.json
-data/proxies.json
-data/sessions.json
-data/.ssh/
