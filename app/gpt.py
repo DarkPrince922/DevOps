@@ -131,6 +131,45 @@ TOOLS = [
         "parameters": {"type": "object", "properties": {
             "command": {"type": "string"}
         }, "required": ["command"]}
+    }},
+    {"type": "function", "function": {
+        "name": "cf_list_zones",
+        "description": "Cloudflare: список доменов (зон) в аккаунте",
+        "parameters": {"type": "object", "properties": {}}
+    }},
+    {"type": "function", "function": {
+        "name": "cf_list_dns",
+        "description": "Cloudflare: показать DNS-записи зоны. zone — имя домена или любой записи в нём",
+        "parameters": {"type": "object", "properties": {
+            "zone": {"type": "string"},
+            "name": {"type": "string", "description": "необязательный фильтр по имени записи"}
+        }, "required": ["zone"]}
+    }},
+    {"type": "function", "function": {
+        "name": "cf_set_dns",
+        "description": "Cloudflare: создать или изменить DNS-запись (upsert по типу+имени). Например переключить домен на новый IP",
+        "parameters": {"type": "object", "properties": {
+            "name": {"type": "string", "description": "полное имя записи, напр. panel.example.com"},
+            "type": {"type": "string", "description": "A, AAAA, CNAME, TXT и т.п."},
+            "content": {"type": "string", "description": "значение: IP для A/AAAA, домен для CNAME"},
+            "proxied": {"type": "boolean", "description": "проксирование Cloudflare (оранжевое облако)"},
+            "ttl": {"type": "integer", "description": "TTL в секундах, 1 = auto"}
+        }, "required": ["name", "type", "content"]}
+    }},
+    {"type": "function", "function": {
+        "name": "cf_delete_dns",
+        "description": "Cloudflare: удалить DNS-запись по имени (опционально по типу)",
+        "parameters": {"type": "object", "properties": {
+            "name": {"type": "string"},
+            "type": {"type": "string"}
+        }, "required": ["name"]}
+    }},
+    {"type": "function", "function": {
+        "name": "cf_purge_cache",
+        "description": "Cloudflare: полностью очистить кэш зоны (домена)",
+        "parameters": {"type": "object", "properties": {
+            "zone": {"type": "string"}
+        }, "required": ["zone"]}
     }}
 ]
 
@@ -165,6 +204,12 @@ def needs_confirmation(tool_name, args):
         cmd = args.get("command", "")
         if is_dangerous(cmd):
             return True, cmd
+    if tool_name == "cf_set_dns":
+        return True, f"Cloudflare: {args.get('type', 'A')} {args.get('name', '')} → {args.get('content', '')}"
+    if tool_name == "cf_delete_dns":
+        return True, f"Cloudflare: удаление записи {args.get('name', '')}"
+    if tool_name == "cf_purge_cache":
+        return True, f"Cloudflare: очистка кэша зоны {args.get('zone', '')}"
     return False, ""
 
 def sanitize_messages(messages):

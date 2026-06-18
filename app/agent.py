@@ -5,6 +5,7 @@ import app.state as state
 from app.storage import get_servers, get_session, set_session
 from app.gpt import gpt_call, consult_agents, trim_history, needs_confirmation, is_message_too_long, is_intermediate_answer, is_tool_call_failure, clean_text, model_extra_system_prompt
 from app.executor import local_exec, ssh_exec, read_file, write_file, web_fetch, web_search
+import app.cloudflare as cf
 from app.ui import status_updater
 
 async def _run_project_tool(name, args, servers, allow_dangerous, uid):
@@ -225,6 +226,26 @@ async def run_agent(goal, update, status_msg, uid, continue_existing=False):
                     elif name in ("list_project_files", "search_project", "read_project_file", "apply_patch", "git_diff", "run_project_tests"):
                         state.STATUS_TEXT[uid] = f"project: {name}"
                         result = await _run_project_tool(name, args, servers, uid in state.CONFIRMED_TASKS, uid)
+
+                    elif name == "cf_list_zones":
+                        state.STATUS_TEXT[uid] = "cloudflare: зоны"
+                        result = await asyncio.to_thread(cf.list_zones)
+
+                    elif name == "cf_list_dns":
+                        state.STATUS_TEXT[uid] = f"cloudflare dns: {args.get('zone', '')[:40]}"
+                        result = await asyncio.to_thread(cf.list_dns, args.get("zone", ""), args.get("name"))
+
+                    elif name == "cf_set_dns":
+                        state.STATUS_TEXT[uid] = f"cloudflare set: {args.get('name', '')[:40]}"
+                        result = await asyncio.to_thread(cf.set_dns, args.get("name", ""), args.get("type", "A"), args.get("content", ""), args.get("proxied"), args.get("ttl", 1))
+
+                    elif name == "cf_delete_dns":
+                        state.STATUS_TEXT[uid] = f"cloudflare del: {args.get('name', '')[:40]}"
+                        result = await asyncio.to_thread(cf.delete_dns, args.get("name", ""), args.get("type"))
+
+                    elif name == "cf_purge_cache":
+                        state.STATUS_TEXT[uid] = f"cloudflare purge: {args.get('zone', '')[:40]}"
+                        result = await asyncio.to_thread(cf.purge_cache, args.get("zone", ""))
 
                     else:
                         result = "неизвестный инструмент"

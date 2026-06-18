@@ -112,6 +112,10 @@ docker compose down
 | `SESSION_TTL_DAYS` | `14` | Срок хранения сессий |
 | `SERVICE_MONITOR_ENABLED` | `1` | Фоновый мониторинг падений |
 | `SERVICE_MONITOR_INTERVAL` | `60` | Интервал мониторинга (сек) |
+| `SERVICE_MONITOR_IGNORE` | — | Игнорируемые systemd-юниты в алертах (через запятую) |
+| `CMD_TIMEOUT` | `180` | Таймаут выполнения команды (локально и по SSH), сек |
+| `SSH_CONNECT_TIMEOUT` | `15` | Таймаут установки SSH-соединения, сек |
+| `CLOUDFLARE_API_TOKEN` | — | Токен Cloudflare API (Zone:Read + DNS:Edit) |
 | `BACKUP_RETENTION` | `5` | Сколько бэкапов хранить |
 
 Многие лимиты также меняются администратором прямо в боте (⚙️ Настройки → 🛠 Админ панель).
@@ -137,6 +141,22 @@ docker compose down
 - `k8s/secret.yaml`
 
 Эти пути уже включены в `.gitignore`. Для распространения используйте только примеры `.env.example` и `*.example.*`. Команда 📦 Бекап бота создаёт архив **без** `.env` и каталога `data/`.
+
+---
+
+## Cloudflare
+
+Управление DNS и кэшем Cloudflare — кнопка ☁️ **Cloudflare** в меню и инструменты ИИ-агента.
+
+Настройка: создайте API Token (Cloudflare → My Profile → API Tokens → шаблон «Edit zone DNS», права `Zone:Read` + `DNS:Edit`) и задайте его через `CLOUDFLARE_API_TOKEN` в `.env` либо в боте: ☁️ Cloudflare → 🔑 Задать токен.
+
+Возможности:
+- список зон (доменов) и DNS-записей;
+- создание/изменение записей A, AAAA, CNAME, TXT (вкл. проксирование и TTL);
+- удаление записей;
+- полная очистка кэша зоны.
+
+Через ИИ-агента можно командой на русском: «переключи `panel.darkprincepanel.ru` на IP нового сервера». Изменение/удаление записей и очистка кэша требуют подтверждения.
 
 ---
 

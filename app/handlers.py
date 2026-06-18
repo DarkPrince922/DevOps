@@ -66,6 +66,7 @@ from app.commands import (
 )
 from app.monitoring_handlers import send_load_graphs
 from app.k8s_handlers import show_k8s_menu, handle_k8s_input, handle_k8s_document, project_k8s_ai_system, apply_project_k8s_operations
+from app.cloudflare_handlers import show_cloudflare_menu, handle_cf_input
 from app.settings_handlers import (
     admin_command, backup_command, admin_callback, agent_callback, provider_callback, proxy_callback,
     proxy_menu_markup, proxy_status_text, projects_menu_markup, projects_menu_text, project_callback
@@ -433,6 +434,10 @@ async def handle(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await show_k8s_menu(update)
         return
 
+    if text == "☁️ Cloudflare":
+        await show_cloudflare_menu(update)
+        return
+
     if text == "🛠 Админ панель":
         if not state.is_admin_id(uid):
             await update.message.reply_text(f"⛔ Админ-панель доступна только администратору. Ваш Telegram ID: {uid}")
@@ -462,6 +467,11 @@ async def handle(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     if mode in {"k8s_config", "k8s_secret", "k8s_image", "k8s_kubeconfig"}:
         handled = await handle_k8s_input(update, ctx, mode)
+        if handled:
+            return
+
+    if mode in {"cf_token", "cf_set_record", "cf_del_record"}:
+        handled = await handle_cf_input(update, ctx, mode)
         if handled:
             return
 
