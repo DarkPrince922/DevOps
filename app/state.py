@@ -11,6 +11,8 @@ ENV_API_KEY = API_KEY
 API_BASE = (os.environ.get("AI_BASE_URL") or os.environ.get("ROUTERAI_BASE_URL") or os.environ.get("CODEX_BASE_URL") or os.environ.get("OPENAI_BASE_URL") or "https://routerai.ru/api/v1").rstrip("/")
 MODEL    = os.environ.get("AI_MODEL") or os.environ.get("MODEL") or "anthropic/claude-opus-4-7"
 CLOUDFLARE_API_TOKEN = os.environ.get("CLOUDFLARE_API_TOKEN", "")
+REMNAWAVE_URL = os.environ.get("REMNAWAVE_URL", "").rstrip("/")
+REMNAWAVE_TOKEN = os.environ.get("REMNAWAVE_TOKEN", "")
 
 DATA_DIR     = Path(os.environ.get("DATA_DIR", "/app/data"))
 DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -33,6 +35,7 @@ PUBLIC_ACCESS = os.environ.get("PUBLIC_ACCESS", "0").lower() in {"1", "true", "y
 ALLOWED_USERS_FILE = DATA_DIR / "allowed_users.json"
 K8S_FILE = DATA_DIR / "k8s.json"
 CF_FILE = DATA_DIR / "cloudflare.json"
+RW_FILE = DATA_DIR / "remnawave.json"
 CURRENT_USER_ID = contextvars.ContextVar("CURRENT_USER_ID", default=None)
 MAX_OUTPUT   = int(os.environ.get("MAX_OUTPUT", "4000"))
 MAX_FILE_SIZE = int(os.environ.get("MAX_FILE_SIZE", "200000"))
@@ -128,7 +131,7 @@ def _crypt_server_secrets(data, encrypt=True):
                 cfg[key] = encrypt_secret(cfg[key]) if encrypt else decrypt_secret(cfg[key])
     return data
 
-USER_SCOPED_FILES = {"servers.json", "settings.json", "agents.json", "providers.json", "projects.json", "proxies.json", "k8s.json", "cloudflare.json"}
+USER_SCOPED_FILES = {"servers.json", "settings.json", "agents.json", "providers.json", "projects.json", "proxies.json", "k8s.json", "cloudflare.json", "remnawave.json"}
 
 def set_current_user_id(uid):
     try:

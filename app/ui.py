@@ -64,7 +64,8 @@ def kb():
         ["📊 Мониторинг", "🐳 Docker"],
         ["📡 Статус", "✅ Команды"],
         ["🌐 Серверы", "☸️ Kubernetes"],
-        ["☁️ Cloudflare", "⚙️ Настройки"],
+        ["☁️ Cloudflare", "🛰 Remnawave"],
+        ["⚙️ Настройки"],
         ["♻️ Сброс сессии", "❌ Отмена", "⏹ СТОП"]
     ], resize_keyboard=True, is_persistent=True)
 

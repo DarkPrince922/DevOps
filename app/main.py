@@ -5,6 +5,7 @@ from app.handlers import start, admin_command, backup_command, delete_server_cal
 from app.monitor import service_monitor
 from app.k8s_handlers import k8s_config_command, k8s_secret_command, k8s_image_command, k8s_callback
 from app.cloudflare_handlers import cf_callback
+from app.remnawave_handlers import rw_callback
 from app.storage import prune_backups
 import asyncio
 
@@ -49,6 +50,7 @@ def main():
     app.add_handler(CallbackQueryHandler(proxy_callback, pattern="^proxy:"))
     app.add_handler(CallbackQueryHandler(k8s_callback, pattern="^k8s:"))
     app.add_handler(CallbackQueryHandler(cf_callback, pattern="^cf:"))
+    app.add_handler(CallbackQueryHandler(rw_callback, pattern="^rw:"))
     app.add_handler(CallbackQueryHandler(project_callback, pattern="^project:"))
     app.add_handler(CallbackQueryHandler(server_callback, pattern="^server:"))
     app.add_handler(CallbackQueryHandler(preapproved_callback, pattern="^precmd:"))

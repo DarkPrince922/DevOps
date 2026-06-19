@@ -170,6 +170,42 @@ TOOLS = [
         "parameters": {"type": "object", "properties": {
             "zone": {"type": "string"}
         }, "required": ["zone"]}
+    }},
+    {"type": "function", "function": {
+        "name": "rw_stats",
+        "description": "Remnawave VPN-панель: системная статистика (пользователи, онлайн, память)",
+        "parameters": {"type": "object", "properties": {}}
+    }},
+    {"type": "function", "function": {
+        "name": "rw_list_users",
+        "description": "Remnawave: список пользователей панели",
+        "parameters": {"type": "object", "properties": {
+            "limit": {"type": "integer"}
+        }}
+    }},
+    {"type": "function", "function": {
+        "name": "rw_list_nodes",
+        "description": "Remnawave: список нод и их статус",
+        "parameters": {"type": "object", "properties": {}}
+    }},
+    {"type": "function", "function": {
+        "name": "rw_list_hosts",
+        "description": "Remnawave: список хостов (точек подключения)",
+        "parameters": {"type": "object", "properties": {}}
+    }},
+    {"type": "function", "function": {
+        "name": "rw_api",
+        "description": (
+            "Remnawave: универсальный вызов REST API панели для всего остального — "
+            "создание/изменение/удаление пользователей, нод, хостов и правка Xray config-профилей. "
+            "path начинается с /api (например /api/users, /api/nodes, /api/hosts, /api/config-profiles). "
+            "Для незнакомых операций сначала сделай GET, чтобы увидеть структуру, затем POST/PATCH/DELETE с нужным телом."
+        ),
+        "parameters": {"type": "object", "properties": {
+            "method": {"type": "string", "description": "GET, POST, PATCH, PUT или DELETE"},
+            "path": {"type": "string", "description": "путь, начинается с /api"},
+            "body": {"type": "object", "description": "тело запроса для POST/PATCH/PUT"}
+        }, "required": ["method", "path"]}
     }}
 ]
 
@@ -210,6 +246,8 @@ def needs_confirmation(tool_name, args):
         return True, f"Cloudflare: удаление записи {args.get('name', '')}"
     if tool_name == "cf_purge_cache":
         return True, f"Cloudflare: очистка кэша зоны {args.get('zone', '')}"
+    if tool_name == "rw_api" and str(args.get("method", "GET")).upper() in ("POST", "PUT", "PATCH", "DELETE"):
+        return True, f"Remnawave: {str(args.get('method', '')).upper()} {args.get('path', '')}"
     return False, ""
 
 def sanitize_messages(messages):
