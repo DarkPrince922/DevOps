@@ -24,14 +24,21 @@ def _token():
     return (c.get("token") or state.REMNAWAVE_TOKEN or "").strip()
 
 
+def _cookie():
+    """Кастомная кука защиты панели (Caddy/eGames и т.п.), если задана."""
+    c = _cfg()
+    return (c.get("cookie") or state.REMNAWAVE_COOKIE or "").strip()
+
+
 def has_creds():
     return bool(_base() and _token())
 
 
-def save_creds(url, token):
+def save_creds(url, token, cookie=""):
     state.save_json(state.RW_FILE, {
         "url": str(url or "").strip().rstrip("/"),
         "token": str(token or "").strip(),
+        "cookie": str(cookie or "").strip(),
     })
 
 
@@ -55,15 +62,20 @@ def _request(method, path, body=None, params=None, timeout=30):
         return None, "API-токен не задан"
     if not path.startswith("/"):
         path = "/" + path
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+    cookie = _cookie()
+    if cookie:
+        # защита панели на уровне реверс-прокси (Caddy/eGames)
+        headers["Cookie"] = cookie
     try:
         r = requests.request(
             method.upper(),
             base + path,
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            },
+            headers=headers,
             json=body,
             params=params,
             proxies=requests_proxy(),
