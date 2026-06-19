@@ -47,8 +47,12 @@ async def rw_callback(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if action == "connect":
         ctx.user_data["mode"] = "rw_connect"
         await query.edit_message_text(
-            "Пришли данные панели в формате:\nURL | API_TOKEN\n\n"
-            "Например:\nhttps://panel.example.com | eyJhbGciOi...\n\n"
+            "Пришли данные панели в формате:\nURL | API_TOKEN | COOKIE\n\n"
+            "COOKIE — необязательна, нужна если панель защищена кукой реверс-прокси "
+            "(скрипты eGames/Caddy). Формат куки: имя=значение.\n\n"
+            "Примеры:\n"
+            "https://panel.example.com | eyJhbGciOi...\n"
+            "https://panel.example.com | eyJhbGciOi... | mySecret=abc123\n\n"
             "Токен создаётся в панели Remnawave → API Tokens."
         )
         return
@@ -69,15 +73,16 @@ async def handle_rw_input(update: Update, ctx: ContextTypes.DEFAULT_TYPE, mode: 
     if mode != "rw_connect":
         return False
     text = (update.message.text or "").strip()
-    parts = [p.strip() for p in text.split("|", 1)]
-    if len(parts) != 2 or not parts[0] or not parts[1]:
-        await update.message.reply_text("❌ Формат: URL | API_TOKEN\nНапример: https://panel.example.com | eyJ...")
+    parts = [p.strip() for p in text.split("|", 2)]
+    if len(parts) < 2 or not parts[0] or not parts[1]:
+        await update.message.reply_text("❌ Формат: URL | API_TOKEN [| COOKIE]\nНапример: https://panel.example.com | eyJ... | mySecret=abc")
         return True
-    url, token = parts
+    url, token = parts[0], parts[1]
+    cookie = parts[2] if len(parts) > 2 else ""
     if not url.startswith(("http://", "https://")):
         await update.message.reply_text("❌ URL должен начинаться с http:// или https://")
         return True
-    rw.save_creds(url, token)
+    rw.save_creds(url, token, cookie)
     ctx.user_data.pop("mode", None)
     check = await asyncio.to_thread(rw.system_stats)
     ok = not check.startswith("❌")

@@ -118,6 +118,7 @@ docker compose down
 | `CLOUDFLARE_API_TOKEN` | — | Токен Cloudflare API (Zone:Read + DNS:Edit) |
 | `REMNAWAVE_URL` | — | URL панели Remnawave |
 | `REMNAWAVE_TOKEN` | — | API-токен Remnawave (раздел API Tokens) |
+| `REMNAWAVE_COOKIE` | — | Кука защиты панели (реверс-прокси Caddy/eGames), формат `имя=значение` |
 | `BACKUP_RETENTION` | `5` | Сколько бэкапов хранить |
 
 Многие лимиты также меняются администратором прямо в боте (⚙️ Настройки → 🛠 Админ панель).
@@ -166,7 +167,9 @@ docker compose down
 
 Управление VPN-панелью [Remnawave](https://remna.st) — кнопка 🛰 **Remnawave** и инструменты ИИ-агента.
 
-Настройка: создайте API-токен в панели (раздел API Tokens) и задайте `REMNAWAVE_URL` + `REMNAWAVE_TOKEN` в `.env`, либо в боте: 🛰 Remnawave → 🔑 Подключить панель (формат `URL | TOKEN`).
+Настройка: создайте API-токен в панели (раздел API Tokens) и задайте `REMNAWAVE_URL` + `REMNAWAVE_TOKEN` в `.env`, либо в боте: 🛰 Remnawave → 🔑 Подключить панель (формат `URL | TOKEN | COOKIE`).
+
+Если панель защищена кукой реверс-прокси (скрипты установки eGames/Caddy), укажите её третьим полем (`имя=значение`) или через `REMNAWAVE_COOKIE` — бот будет слать её в заголовке `Cookie` на каждый запрос.
 
 Меню (чтение): статистика, список пользователей, нод и хостов.
 

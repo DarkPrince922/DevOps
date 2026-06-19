@@ -13,6 +13,7 @@ MODEL    = os.environ.get("AI_MODEL") or os.environ.get("MODEL") or "anthropic/c
 CLOUDFLARE_API_TOKEN = os.environ.get("CLOUDFLARE_API_TOKEN", "")
 REMNAWAVE_URL = os.environ.get("REMNAWAVE_URL", "").rstrip("/")
 REMNAWAVE_TOKEN = os.environ.get("REMNAWAVE_TOKEN", "")
+REMNAWAVE_COOKIE = os.environ.get("REMNAWAVE_COOKIE", "")
 
 DATA_DIR     = Path(os.environ.get("DATA_DIR", "/app/data"))
 DATA_DIR.mkdir(parents=True, exist_ok=True)
