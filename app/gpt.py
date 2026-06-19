@@ -436,6 +436,9 @@ def gpt_call(messages, model=None):
                 if attempt < len(delays):
                     time.sleep(delays[attempt])
                     continue
+                fallback = _non_stream_fallback(api_base, api_key, use_model, messages)
+                if fallback:
+                    return fallback
                 return {"content": "❌ AI-сервис временно недоступен. Попробуй повторить запрос чуть позже."}
             if r.status_code >= 400:
                 return {"content": f"❌ API HTTP {r.status_code}: {r.text[:1000]}"}
@@ -568,6 +571,9 @@ def gpt_call(messages, model=None):
             if attempt < len(delays):
                 time.sleep(delays[attempt])
                 continue
+            fallback = _non_stream_fallback(api_base, api_key, use_model, messages)
+            if fallback:
+                return fallback
             return {"content": "❌ AI-сервис временно недоступен. Попробуй повторить запрос чуть позже."}
         except Exception as e:
             return {"content": f"❌ Ошибка API: {e}"}
