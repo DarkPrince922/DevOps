@@ -6,6 +6,7 @@ from app.storage import get_servers, get_session, set_session
 from app.gpt import gpt_call, consult_agents, trim_history, needs_confirmation, is_message_too_long, is_intermediate_answer, is_tool_call_failure, clean_text, model_extra_system_prompt
 from app.executor import local_exec, ssh_exec, read_file, write_file, web_fetch, web_search
 import app.cloudflare as cf
+import app.remnawave as rw
 from app.ui import status_updater
 
 async def _run_project_tool(name, args, servers, allow_dangerous, uid):
@@ -246,6 +247,26 @@ async def run_agent(goal, update, status_msg, uid, continue_existing=False):
                     elif name == "cf_purge_cache":
                         state.STATUS_TEXT[uid] = f"cloudflare purge: {args.get('zone', '')[:40]}"
                         result = await asyncio.to_thread(cf.purge_cache, args.get("zone", ""))
+
+                    elif name == "rw_stats":
+                        state.STATUS_TEXT[uid] = "remnawave: статистика"
+                        result = await asyncio.to_thread(rw.system_stats)
+
+                    elif name == "rw_list_users":
+                        state.STATUS_TEXT[uid] = "remnawave: пользователи"
+                        result = await asyncio.to_thread(rw.list_users, args.get("limit", 30))
+
+                    elif name == "rw_list_nodes":
+                        state.STATUS_TEXT[uid] = "remnawave: ноды"
+                        result = await asyncio.to_thread(rw.list_nodes)
+
+                    elif name == "rw_list_hosts":
+                        state.STATUS_TEXT[uid] = "remnawave: хосты"
+                        result = await asyncio.to_thread(rw.list_hosts)
+
+                    elif name == "rw_api":
+                        state.STATUS_TEXT[uid] = f"remnawave: {str(args.get('method', 'GET')).upper()} {str(args.get('path', ''))[:40]}"
+                        result = await asyncio.to_thread(rw.api_call, args.get("method", "GET"), args.get("path", ""), args.get("body"))
 
                     else:
                         result = "неизвестный инструмент"

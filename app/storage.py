@@ -65,8 +65,22 @@ def reset_session(uid):
 
 def get_session(uid, servers):
     key = str(uid)
-    names = (["Главный сервер"] if state.is_admin_id(uid) else []) + list(servers.keys())
-    system_text = state.SYSTEM_PROMPT + f"\nДоступные серверы: {', '.join(names)}. Для Главного сервера используй local_exec — это выполнение команд прямо в контейнере бота без SSH."
+    ssh_servers = list(servers.keys())
+    names = (["Главный сервер"] if state.is_admin_id(uid) else []) + ssh_servers
+    system_text = state.SYSTEM_PROMPT + f"\nДоступные серверы: {', '.join(names)}."
+    system_text += (
+        "\nВАЖНО про выбор сервера:"
+        "\n- «Главный сервер» (local_exec) — это ТОЛЬКО внутренний контейнер самого бота (каталог /app). "
+        "Команды пользователя по его инфраструктуре там выполнять НЕ нужно."
+        "\n- Любые задачи на серверах пользователя выполняй через ssh_exec на нужном сервере из списка выше."
+    )
+    if len(ssh_servers) == 1:
+        system_text += (
+            f"\n- Доступен один сервер «{ssh_servers[0]}» — по умолчанию все команды пользователя выполняй на нём через ssh_exec, "
+            "не используй local_exec, если пользователь явно не попросил «локально/в контейнере бота»."
+        )
+    elif ssh_servers:
+        system_text += "\n- Если пользователь не указал сервер, уточни какой из списка, либо используй сервер активного проекта."
     project = state.active_project()
     if project:
         project_server = state.normalize_server_name(project.get("server"), servers)
