@@ -288,12 +288,13 @@ async def run_agent(goal, update, status_msg, uid, continue_existing=False):
                 history.append({"role": "assistant", "content": content})
                 set_session(uid, history)
                 if is_tool_call_failure(content):
-                    if tool_retry_count < 2:
+                    if tool_retry_count < 3:
                         tool_retry_count += 1
                         history.append({"role": "user", "content": (
                             "Не пиши служебные сообщения о невозможности сформировать вызов инструмента. "
-                            "Вызови нужный инструмент (function call / tool_calls) в стандартном формате прямо сейчас, одним конкретным шагом. "
-                            "Если шаг неоднозначен — начни с самого безопасного: чтение или диагностика (например, read_file/ssh_exec с командой просмотра)."
+                            "Сейчас же вызови ОДИН инструмент (function call / tool_calls) в стандартном формате. "
+                            "Не описывай его словами и не показывай JSON в тексте — используй именно механизм tool_calls. "
+                            "Если шаг неоднозначен — начни с самого безопасного: чтение или диагностика (read_file, ssh_exec с командой просмотра, rw_api GET)."
                         )})
                         set_session(uid, history)
                         continue
