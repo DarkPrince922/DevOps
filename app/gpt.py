@@ -3,6 +3,8 @@ import json, time, re, requests, base64, mimetypes
 import app.state as state
 from app.proxy import requests_proxy
 from app.executor import is_dangerous
+import app.cloudflare as cf
+import app.remnawave as rw
 
 # ────────────────────────────────────────────────
 # routerai.ru — OpenAI-совместимый API
@@ -209,6 +211,52 @@ TOOLS = [
     }}
 ]
 
+# Группы инструментов для экономии токенов и стабильности function-calling:
+# слабым моделям проще, когда им не вываливают сразу все ~22 инструмента.
+_PROJECT_NAMES = {"list_project_files", "search_project", "read_project_file", "apply_patch", "git_diff", "run_project_tests"}
+_CF_NAMES = {"cf_list_zones", "cf_list_dns", "cf_set_dns", "cf_delete_dns", "cf_purge_cache"}
+_RW_NAMES = {"rw_stats", "rw_list_users", "rw_list_nodes", "rw_list_hosts", "rw_api"}
+_SPECIAL_NAMES = _PROJECT_NAMES | _CF_NAMES | _RW_NAMES  # всё, что не базовое
+
+_CF_KEYWORDS = ("cloudflare", "cloudfl", "клаудфл", " cf ", "dns", "домен", "поддомен", "зон",
+                "cname", "a-запис", "запись a", "ttl", "proxied", "оранжев", "purge", "nameserver", "ns-запис")
+_RW_KEYWORDS = ("remnawave", "remna", "ремнав", "нод", "node", "подписк", "subscription", "inbound",
+                "инбаунд", "xray", "сквад", "squad", "vless", "vmess", "shadowsocks", "хост", "host", "панел", "vpn")
+
+
+def _recent_text(messages, n=8):
+    parts = []
+    for m in messages[-n:]:
+        c = m.get("content")
+        if isinstance(c, str):
+            parts.append(c)
+        elif isinstance(c, list):
+            for p in c:
+                if isinstance(p, dict) and isinstance(p.get("text"), str):
+                    parts.append(p["text"])
+    return " ".join(parts).lower()
+
+
+def select_tools(messages):
+    """Базовые инструменты — всегда; специализированные группы подключаем,
+    только когда они настроены и релевантны текущему диалогу."""
+    text = _recent_text(messages)
+    keep = set()
+    if state.active_project():
+        keep |= _PROJECT_NAMES
+    try:
+        if cf.has_token() and any(k in text for k in _CF_KEYWORDS):
+            keep |= _CF_NAMES
+    except Exception:
+        pass
+    try:
+        if rw.has_creds() and any(k in text for k in _RW_KEYWORDS):
+            keep |= _RW_NAMES
+    except Exception:
+        pass
+    # базовые (всё, что не входит в специализированные группы) + отобранные группы
+    return [t for t in TOOLS if t["function"]["name"] not in _SPECIAL_NAMES or t["function"]["name"] in keep]
+
 
 def model_extra_system_prompt(model=None):
     name = (model or state.active_agent_model() or "").lower()
@@ -228,7 +276,7 @@ def model_extra_system_prompt(model=None):
 
 def build_api_payload(model, messages, api_base, stream=True):
     payload = {"model": model, "messages": messages, "max_tokens": 3000, "stream": stream}
-    payload.update({"tools": TOOLS, "tool_choice": "auto"})
+    payload.update({"tools": select_tools(messages), "tool_choice": "auto"})
     return payload
 
 def needs_confirmation(tool_name, args):
